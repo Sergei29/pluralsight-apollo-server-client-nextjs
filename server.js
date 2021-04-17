@@ -1,8 +1,17 @@
-const { gql, ApolloServer } = require("apollo-server");
+const { gql, ApolloServer, UserInputError } = require("apollo-server");
+const axios = require("axios").default;
+
+const DB_URI = "http://localhost:5000";
 
 const typeDefs = gql`
   type Speaker {
     id: ID!
+    first: String
+    last: String
+    favourite: Boolean
+  }
+
+  input SpeakerInput {
     first: String
     last: String
     favourite: Boolean
@@ -15,40 +24,58 @@ const typeDefs = gql`
   type Query {
     speakers: SpeakerResults
   }
+
+  type Mutation {
+    toggleSpeakerFavourite(speakerId: Int!): Speaker
+    addSpeaker(speaker: SpeakerInput!): Speaker
+    deleteSpeaker(speakerId: Int!): Speaker
+  }
 `;
 
 const resolvers = {
   Query: {
-    speakers: (parent, args, context, info) => {
-      const speakerResults = {
-        datalist: [
-          { id: "101", first: "David", last: "Jones", favourite: null },
-          { id: "102", first: "Tom", last: "Lewis", favourite: null },
-          { id: "103", first: "Dough", last: "Thompson", favourite: null },
-        ],
+    speakers: async (parent, args, context, info) => {
+      const { data } = await axios.get(`${DB_URI}/speakers`);
+      return {
+        datalist: data,
       };
-      return speakerResults;
     },
   },
+  Mutation: {
+    toggleSpeakerFavourite: async (parent, args, context, info) => {
+      const { data } = await axios.get(`${DB_URI}/speakers/${args.speakerId}`);
+      const toggledData = { ...data, favourite: !data.favourite };
+      await axios.put(`${DB_URI}/speakers/${args.speakerId}`, toggledData);
+      return toggledData;
+    },
+    addSpeaker: async (parent, args, context, info) => {
+      const { data: speakers } = await axios.get(`${DB_URI}/speakers`);
+      const { first, last, favourite } = args.speaker;
+      const foundRecord = speakers.find(
+        (speaker) => speaker.first === first && speaker.last === last
+      );
 
-  SpeakerResults: {
-    datalist: (parent, args, context, info) => {
-      return parent.datalist;
-    },
-  },
+      if (foundRecord) {
+        throw new UserInputError(`Speaker ${first} ${last} already exists.`, {
+          invalidArgs: Object.keys(args),
+        });
+      }
 
-  Speaker: {
-    id: (parent, args, context, info) => {
-      return parent.id;
+      const { data: newSpeaker } = await axios.post(`${DB_URI}/speakers`, {
+        first,
+        last,
+        favourite,
+      });
+
+      return newSpeaker;
     },
-    first: (parent, args, context, info) => {
-      return parent.first;
-    },
-    last: (parent, args, context, info) => {
-      return parent.last;
-    },
-    favourite: (parent, args, context, info) => {
-      return parent.favourite;
+    deleteSpeaker: async (parent, args, context, info) => {
+      const { data: foundSpeaker } = await axios.get(
+        `${DB_URI}/speakers/${args.speakerId}`
+      );
+
+      await axios.delete(`${DB_URI}/speakers/${args.speakerId}`);
+      return foundSpeaker;
     },
   },
 };
@@ -59,9 +86,11 @@ async function apolloServer() {
     resolvers,
   });
 
+  const PORT = process.env.PORT || 4000;
+
   try {
-    server.listen(4000, () => {
-      console.log("Server starting at http://localhost:4000");
+    server.listen(PORT, () => {
+      console.log(`Server starting at http://localhost:${PORT}`);
     });
   } catch (error) {
     console.log(error.message);
