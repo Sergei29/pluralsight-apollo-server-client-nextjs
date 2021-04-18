@@ -47,10 +47,10 @@
       "favorite": true
     },
     {
-      "first": "John",
-      "last": "Doe",
-      "favourite": true,
-      "id": 47344
+      "first": "Joseph",
+      "last": "Davidson",
+      "favourite": false,
+      "id": 47345
     }
   ]
 }
