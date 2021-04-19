@@ -1,5 +1,5 @@
 import React from "react";
-import { gql, useQuery, useMutation } from "@apollo/client";
+import { gql, useQuery, useMutation, useApolloClient } from "@apollo/client";
 import Toolbar from "../components/Toolbar";
 
 const GET_SPEAKERS = gql`
@@ -53,6 +53,7 @@ const IndexPage = () => {
   const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
   const [deleteSpeaker] = useMutation(DELETE_SPEAKER);
   const [addSpeaker] = useMutation(ADD_SPEAKER);
+  const apolloClient = useApolloClient();
 
   if (loading === true) return <div className="col-sm-6">Loading...</div>;
   if (error) return <div className="col-sm-6">Error: {error.message}</div>;
@@ -75,9 +76,19 @@ const IndexPage = () => {
     });
   };
 
-  const handleDeleteSpeaker = (id) => {
+  const handleDeleteSpeaker = (id, first, last, favourite) => {
     deleteSpeaker({
       variables: { speakerId: parseInt(id) },
+      optimisticResponse: {
+        __typename: "Mutation",
+        deleteSpeaker: {
+          __typename: "Speaker",
+          id,
+          first,
+          last,
+          favourite,
+        },
+      },
       update: (cache, { data: { deleteSpeaker } }) => {
         const { speakers } = cache.readQuery({ query: GET_SPEAKERS });
         cache.writeQuery({
@@ -94,9 +105,42 @@ const IndexPage = () => {
       },
     });
   };
+
+  const toggleFavourite = (id, first, last, favourite) => {
+    toggleSpeakerFavourite({
+      variables: { speakerId: parseInt(id) },
+      optimisticResponse: {
+        __typename: "Mutation",
+        toggleSpeakerFavourite: {
+          __typename: "Speaker",
+          id,
+          first,
+          last,
+          favourite: !favourite,
+        },
+      },
+    });
+  };
+
+  const sortByIdDescending = () => {
+    const { speakers } = apolloClient.cache.readQuery({ query: GET_SPEAKERS });
+    apolloClient.cache.writeQuery({
+      query: GET_SPEAKERS,
+      data: {
+        speakers: {
+          __typename: "SpeakerResults",
+          datalist: [...speakers.datalist].sort((a, b) => b.id - a.id),
+        },
+      },
+    });
+  };
+
   return (
     <>
-      <Toolbar insertSpeakerEvent={handleAddNewSpeaker} />
+      <Toolbar
+        insertSpeakerEvent={handleAddNewSpeaker}
+        sortByIdDescending={sortByIdDescending}
+      />
       <div className="container show-fav">
         <div className="row">
           <div className="fav-list">
@@ -111,9 +155,7 @@ const IndexPage = () => {
                   <span className="action">
                     <span
                       onClick={() =>
-                        toggleSpeakerFavourite({
-                          variables: { speakerId: parseInt(id) },
-                        })
+                        toggleFavourite(id, first, last, favourite)
                       }
                     >
                       <span
@@ -125,7 +167,11 @@ const IndexPage = () => {
                       />
                       &nbsp;&nbsp; Favourite
                     </span>
-                    <span onClick={() => handleDeleteSpeaker(id)}>
+                    <span
+                      onClick={() =>
+                        handleDeleteSpeaker(id, first, last, favourite)
+                      }
+                    >
                       <span className="fa fa-trash red" />
                       &nbsp;&nbsp;Delete
                     </span>

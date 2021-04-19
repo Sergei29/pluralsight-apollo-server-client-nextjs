@@ -17,7 +17,8 @@
       "bio": "Founder of Eventuate, Author of POJOs in Action, creator of the original Cloud Foundry",
       "first": "Chris",
       "last": "Richardson",
-      "favorite": false
+      "favorite": false,
+      "favourite": false
     },
     {
       "twitterHandle": "",
@@ -45,12 +46,6 @@
       "first": "Eve",
       "last": "Porcello",
       "favorite": true
-    },
-    {
-      "first": "Joseph",
-      "last": "Davidson",
-      "favourite": false,
-      "id": 47345
     }
   ]
 }
