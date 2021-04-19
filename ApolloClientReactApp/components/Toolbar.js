@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation, useApolloClient } from "@apollo/client";
 import {
   Button,
   Form,
@@ -10,21 +11,55 @@ import {
   ModalFooter,
   ModalHeader,
 } from "reactstrap";
+import { ADD_SPEAKER } from "../graphql/mutations";
+import { GET_SPEAKERS } from "../graphql/queries";
 
-const Toolbar = ({ insertSpeakerEvent, sortByIdDescending }) => {
+const Toolbar = () => {
   const [modal, setModal] = useState(false);
+  const [first, setFirst] = useState("");
+  const [last, setLast] = useState("");
+  const [favourite, setFavorite] = useState(false);
+  const [addSpeaker] = useMutation(ADD_SPEAKER);
+  const apolloClient = useApolloClient();
+
+  const addSpeakerEvent = (first, last, favourite) => {
+    addSpeaker({
+      variables: { speaker: { first, last, favourite } },
+      update: (cache, { data: { addSpeaker } }) => {
+        const { speakers } = cache.readQuery({ query: GET_SPEAKERS });
+        cache.writeQuery({
+          query: GET_SPEAKERS,
+          data: {
+            speakers: {
+              __typename: "SpeakerResults",
+              datalist: [addSpeaker, ...speakers.datalist],
+            },
+          },
+        });
+      },
+    });
+  };
+
+  const sortByIdDescending = () => {
+    const { speakers } = apolloClient.cache.readQuery({ query: GET_SPEAKERS });
+    apolloClient.cache.writeQuery({
+      query: GET_SPEAKERS,
+      data: {
+        speakers: {
+          __typename: "SpeakerResults",
+          datalist: [...speakers.datalist].sort((a, b) => b.id - a.id),
+        },
+      },
+    });
+  };
 
   const toggleModal = () => {
     setModal((prevModal) => !prevModal);
   };
 
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
-  const [favorite, setFavorite] = useState(false);
-
   const handleSubmit = (event) => {
     event.preventDefault();
-    insertSpeakerEvent(first, last, favorite);
+    addSpeakerEvent(first, last, favourite);
     setFirst("");
     setLast("");
     setFavorite(false);
