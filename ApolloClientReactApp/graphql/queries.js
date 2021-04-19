@@ -8,6 +8,8 @@ export const GET_SPEAKERS = gql`
         first
         last
         favourite
+        fullName @client
+        checkBoxColumn @client
       }
     }
   }

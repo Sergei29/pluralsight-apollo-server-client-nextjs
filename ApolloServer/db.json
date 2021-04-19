@@ -8,7 +8,7 @@
       "first": "Claudia",
       "last": "Galvan",
       "favorite": true,
-      "favourite": true
+      "favourite": false
     },
     {
       "twitterHandle": "@crichardson",
@@ -27,7 +27,8 @@
       "bio": "Douglas Crockford discovered the JSON Data Interchange Format. He is also the author of _JavaScript: The Good Parts_. He has been called a guru, but he is actually more of a mahatma.",
       "first": "Douglas",
       "last": "Crockford",
-      "favorite": false
+      "favorite": false,
+      "favourite": false
     },
     {
       "twitterHandle": "@therockncoder",
@@ -45,7 +46,8 @@
       "bio": "Eve Porcello is an instructor at Moon Highway, egghead.io, and LinkedIn Learning.",
       "first": "Eve",
       "last": "Porcello",
-      "favorite": true
+      "favorite": true,
+      "favourite": false
     }
   ]
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useMutation, useApolloClient } from "@apollo/client";
+import { useMutation, useApolloClient, useReactiveVar } from "@apollo/client";
 import {
   Button,
   Form,
@@ -11,8 +11,9 @@ import {
   ModalFooter,
   ModalHeader,
 } from "reactstrap";
-import { ADD_SPEAKER } from "../graphql/mutations";
+import { ADD_SPEAKER, TOGGLE_SPEAKER_FAVOURITE } from "../graphql/mutations";
 import { GET_SPEAKERS } from "../graphql/queries";
+import { currentThemeVar, checkBoxListVar } from "../graphql/apolloClient";
 
 const Toolbar = () => {
   const [modal, setModal] = useState(false);
@@ -20,7 +21,10 @@ const Toolbar = () => {
   const [last, setLast] = useState("");
   const [favourite, setFavorite] = useState(false);
   const [addSpeaker] = useMutation(ADD_SPEAKER);
+  const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
   const apolloClient = useApolloClient();
+  const currentTheme = useReactiveVar(currentThemeVar);
+  const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
 
   const addSpeakerEvent = (first, last, favourite) => {
     addSpeaker({
@@ -66,10 +70,37 @@ const Toolbar = () => {
     setModal((prevModal) => !prevModal);
   };
 
+  /**
+   * @description toggles favourite for all checked Speakers
+   * @returns {undefined}
+   */
+  const handleToggleCheckAll = () => {
+    if (selectedSpeakersIds) {
+      selectedSpeakersIds.forEach((speakerId) => {
+        toggleSpeakerFavourite({
+          variables: { speakerId: parseInt(speakerId) },
+        });
+      });
+    }
+  };
+
   return (
     <section className="toolbar">
       <div className="container">
         <ul className="toolrow">
+          <li>
+            <strong>Theme &nbsp;</strong>
+            <label className="dropmenu">
+              <select
+                className="form-control theme"
+                onChange={(e) => currentThemeVar(e.currentTarget.value)}
+                value={currentTheme}
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </li>
           <li>
             <div>
               <Button color="info" onClick={toggleModal}>
@@ -78,6 +109,10 @@ const Toolbar = () => {
               &nbsp;
               <Button color="info" onClick={sortByIdDescending}>
                 <span>Sort Speakers by ID Decending</span>
+              </Button>
+              &nbsp;
+              <Button color="info" onClick={handleToggleCheckAll}>
+                <span>Toggle All Checked</span>
               </Button>
               <Modal isOpen={modal} toggle={toggleModal}>
                 <Form onSubmit={handleSubmit}>

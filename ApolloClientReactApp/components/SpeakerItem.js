@@ -1,12 +1,14 @@
 import React from "react";
-import { useMutation } from "@apollo/client";
+import { useMutation, useReactiveVar } from "@apollo/client";
 import { GET_SPEAKERS } from "../graphql/queries";
 import { TOGGLE_SPEAKER_FAVOURITE, DELETE_SPEAKER } from "../graphql/mutations";
+import { checkBoxListVar } from "../graphql/apolloClient";
 
 const SpeakerItem = ({ speakerRec }) => {
-  const { id, first, last, favourite } = speakerRec;
+  const { id, first, last, favourite, fullName, checkBoxColumn } = speakerRec;
   const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
   const [deleteSpeaker] = useMutation(DELETE_SPEAKER);
+  const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
 
   const handleToggleFavourite = (id, first, last, favourite) => {
     toggleSpeakerFavourite({
@@ -54,11 +56,25 @@ const SpeakerItem = ({ speakerRec }) => {
     });
   };
 
+  const handleCheck = () => {
+    const newSelectedIds =
+      checkBoxColumn === true
+        ? selectedSpeakersIds.filter((currentId) => currentId !== id)
+        : selectedSpeakersIds
+        ? [...selectedSpeakersIds, id]
+        : [id];
+    checkBoxListVar(newSelectedIds);
+  };
+
   return (
     <div className="favbox" key={id}>
       <div className="fav-clm col-sm-7">
+        <span
+          className={checkBoxColumn ? "fa fa-check-square-o" : "fa fa-square-o"}
+          onClick={handleCheck}
+        />
         <h4>
-          {first} {last} ({id})
+          {fullName} ({id})
         </h4>
       </div>
       <div className="fav-clm col-sm-5">
