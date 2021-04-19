@@ -18,7 +18,7 @@
       "first": "Chris",
       "last": "Richardson",
       "favorite": false,
-      "favourite": false
+      "favourite": true
     },
     {
       "twitterHandle": "",

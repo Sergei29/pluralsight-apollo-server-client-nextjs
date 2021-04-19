@@ -13,10 +13,14 @@ export const useApollo = () => {
               return `${readField("first")} ${readField("last")}`;
             },
           },
-          checkBoxColumn: (_, { readField }) => {
-            const id = readField("id");
-            const selectedSpeakerIds = checkBoxListVar();
-            return selectedSpeakerIds ? selectedSpeakerIds.includes(id) : false;
+          checkBoxColumn: {
+            read: (_, { readField }) => {
+              const id = readField("id");
+              const selectedSpeakerIds = checkBoxListVar();
+              return selectedSpeakerIds
+                ? selectedSpeakerIds.includes(id)
+                : false;
+            },
           },
         },
       },
