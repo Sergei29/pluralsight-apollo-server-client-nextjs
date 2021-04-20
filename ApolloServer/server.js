@@ -11,6 +11,10 @@ const typeDefs = gql`
     favourite: Boolean
   }
 
+  type PageInfo {
+    totalItemCount: Int
+  }
+
   input SpeakerInput {
     first: String
     last: String
@@ -19,10 +23,11 @@ const typeDefs = gql`
 
   type SpeakerResults {
     datalist: [Speaker]
+    pageInfo: PageInfo
   }
 
   type Query {
-    speakers: SpeakerResults
+    speakers(offset: Int = 0, limit: Int = -1): SpeakerResults
   }
 
   type Mutation {
@@ -35,9 +40,15 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     speakers: async (parent, args, context, info) => {
+      const { offset, limit } = args;
       const { data } = await axios.get(`${DB_URI}/speakers`);
       return {
-        datalist: data,
+        datalist: data.filter((_, index) => {
+          return index > offset - 1 && (offset + limit > index || limit === -1);
+        }),
+        pageInfo: {
+          totalItemCount: data.length,
+        },
       };
     },
   },
