@@ -1,11 +1,15 @@
 import { useQuery, useReactiveVar } from "@apollo/client";
 import { GET_SPEAKERS } from "../graphql/queries";
-import { currentThemeVar } from "../graphql/apolloClient";
+import { currentThemeVar, paginationDataVar } from "../graphql/apolloClient";
 import SpeakerItem from "./SpeakerItem";
 import Toolbar from "./Toolbar";
 
 const SpeakerListItems = () => {
-  const { loading, error, data } = useQuery(GET_SPEAKERS);
+  const paginationData = useReactiveVar(paginationDataVar);
+  const { limit, currentPage } = paginationData;
+  const { loading, error, data } = useQuery(GET_SPEAKERS, {
+    variables: { offset: currentPage * limit, limit },
+  });
   const currentTheme = useReactiveVar(currentThemeVar);
 
   if (loading === true) return <div className="col-sm-6">Loading...</div>;
@@ -13,7 +17,7 @@ const SpeakerListItems = () => {
 
   return (
     <>
-      <Toolbar />
+      <Toolbar totalItemCount={data.speakers.pageInfo.totalItemCount} />
       <div className="container show-fav">
         <div className="row">
           <div

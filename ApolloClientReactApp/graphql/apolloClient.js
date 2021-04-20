@@ -2,6 +2,12 @@ import { ApolloClient, InMemoryCache, makeVar } from "@apollo/client";
 
 export const currentThemeVar = makeVar("dark");
 export const checkBoxListVar = makeVar([]);
+export const paginationDataVar = makeVar({
+  limit: 3,
+  offset: 0,
+  currentPage: 0,
+  totalItemCount: 0,
+});
 
 export const useApollo = () => {
   const options = {

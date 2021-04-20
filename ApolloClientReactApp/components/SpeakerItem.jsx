@@ -2,13 +2,14 @@ import React from "react";
 import { useMutation, useReactiveVar } from "@apollo/client";
 import { GET_SPEAKERS } from "../graphql/queries";
 import { TOGGLE_SPEAKER_FAVOURITE, DELETE_SPEAKER } from "../graphql/mutations";
-import { checkBoxListVar } from "../graphql/apolloClient";
+import { checkBoxListVar, paginationDataVar } from "../graphql/apolloClient";
 
 const SpeakerItem = ({ speakerRec }) => {
   const { id, first, last, favourite, fullName, checkBoxColumn } = speakerRec;
   const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
   const [deleteSpeaker] = useMutation(DELETE_SPEAKER);
   const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
+  const paginationData = useReactiveVar(paginationDataVar);
 
   const handleToggleFavourite = (id, first, last, favourite) => {
     toggleSpeakerFavourite({
@@ -27,6 +28,7 @@ const SpeakerItem = ({ speakerRec }) => {
   };
 
   const handleDelete = (id, first, last, favourite) => {
+    const { offset, limit, currentPage } = paginationData;
     deleteSpeaker({
       variables: { speakerId: parseInt(id) },
       optimisticResponse: {
@@ -40,15 +42,29 @@ const SpeakerItem = ({ speakerRec }) => {
         },
       },
       update: (cache, { data: { deleteSpeaker } }) => {
-        const { speakers } = cache.readQuery({ query: GET_SPEAKERS });
+        const { speakers } = cache.readQuery({
+          query: GET_SPEAKERS,
+          variables: {
+            offset: currentPage * limit,
+            limit,
+          },
+        });
         cache.writeQuery({
           query: GET_SPEAKERS,
+          variables: {
+            offset: currentPage * limit,
+            limit,
+          },
           data: {
             speakers: {
               __typename: "SpeakerResults",
               datalist: speakers.datalist.filter(
                 (objSpeaker) => objSpeaker.id !== deleteSpeaker.id
               ),
+              pageInfo: {
+                __typename: "PageInfo",
+                totalItemCount: 0,
+              },
             },
           },
         });

@@ -13,9 +13,14 @@ import {
 } from "reactstrap";
 import { ADD_SPEAKER, TOGGLE_SPEAKER_FAVOURITE } from "../graphql/mutations";
 import { GET_SPEAKERS } from "../graphql/queries";
-import { currentThemeVar, checkBoxListVar } from "../graphql/apolloClient";
+import {
+  currentThemeVar,
+  checkBoxListVar,
+  paginationDataVar,
+} from "../graphql/apolloClient";
+import PagingOffsetLimitControl from "./PagingOffsetLimitControl";
 
-const Toolbar = () => {
+const Toolbar = ({ totalItemCount }) => {
   const [modal, setModal] = useState(false);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -25,18 +30,34 @@ const Toolbar = () => {
   const apolloClient = useApolloClient();
   const currentTheme = useReactiveVar(currentThemeVar);
   const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
+  const paginationData = useReactiveVar(paginationDataVar);
 
   const addSpeakerEvent = (first, last, favourite) => {
+    const { offset, limit, currentPage } = paginationData;
     addSpeaker({
       variables: { speaker: { first, last, favourite } },
       update: (cache, { data: { addSpeaker } }) => {
-        const { speakers } = cache.readQuery({ query: GET_SPEAKERS });
+        const { speakers } = cache.readQuery({
+          query: GET_SPEAKERS,
+          variables: {
+            offset: currentPage * limit,
+            limit,
+          },
+        });
         cache.writeQuery({
           query: GET_SPEAKERS,
+          variables: {
+            offset: currentPage * limit,
+            limit,
+          },
           data: {
             speakers: {
               __typename: "SpeakerResults",
-              datalist: [addSpeaker, ...speakers.datalist],
+              datalist: [...speakers.datalist, addSpeaker],
+              pageInfo: {
+                __typename: "PageInfo",
+                totalItemCount,
+              },
             },
           },
         });
@@ -45,13 +66,26 @@ const Toolbar = () => {
   };
 
   const sortByIdDescending = () => {
-    const { speakers } = apolloClient.cache.readQuery({ query: GET_SPEAKERS });
+    const { offset, limit, currentPage } = paginationData;
+    const { speakers } = apolloClient.cache.readQuery({
+      query: GET_SPEAKERS,
+      variables: {
+        offset: currentPage * limit,
+        limit,
+      },
+    });
+    const sortedDatalist = [...speakers.datalist].sort((a, b) => b.id - a.id);
     apolloClient.cache.writeQuery({
       query: GET_SPEAKERS,
+      variables: { offset: currentPage * limit, limit },
       data: {
         speakers: {
           __typename: "SpeakerResults",
-          datalist: [...speakers.datalist].sort((a, b) => b.id - a.id),
+          datalist: sortedDatalist,
+          pageInfo: {
+            __typename: "PageInfo",
+            totalItemCount,
+          },
         },
       },
     });
@@ -84,12 +118,15 @@ const Toolbar = () => {
     }
   };
 
+  const lastPage = Math.trunc((totalItemCount - 1) / paginationData.limit);
   return (
     <section className="toolbar">
       <div className="container">
         <ul className="toolrow">
           <li>
-            <strong>Theme &nbsp;</strong>
+            <PagingOffsetLimitControl lastPage={lastPage} />
+          </li>
+          <li>
             <label className="dropmenu">
               <select
                 className="form-control theme"
