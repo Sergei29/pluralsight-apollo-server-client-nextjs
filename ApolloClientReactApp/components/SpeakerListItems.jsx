@@ -24,14 +24,14 @@ const SpeakerListItems = () => {
             className={currentTheme === "dark" ? "fav-list dark" : "fav-list"}
           >
             {data.speakers.datalist.map(
-              ({ id, first, last, favourite, fullName, checkBoxColumn }) => (
+              ({ id, first, last, favorite, fullName, checkBoxColumn }) => (
                 <SpeakerItem
                   key={id}
                   speakerRec={{
                     id,
                     first,
                     last,
-                    favourite,
+                    favorite,
                     fullName,
                     checkBoxColumn,
                   }}

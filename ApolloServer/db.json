@@ -7,8 +7,7 @@
       "bio": "Claudia is a leading expert on product internationalization",
       "first": "Claudia",
       "last": "Galvan",
-      "favorite": true,
-      "favourite": false
+      "favorite": false
     },
     {
       "twitterHandle": "@crichardson",
@@ -17,8 +16,7 @@
       "bio": "Founder of Eventuate, Author of POJOs in Action, creator of the original Cloud Foundry",
       "first": "Chris",
       "last": "Richardson",
-      "favorite": false,
-      "favourite": true
+      "favorite": false
     },
     {
       "twitterHandle": "",
@@ -27,8 +25,7 @@
       "bio": "Douglas Crockford discovered the JSON Data Interchange Format. He is also the author of _JavaScript: The Good Parts_. He has been called a guru, but he is actually more of a mahatma.",
       "first": "Douglas",
       "last": "Crockford",
-      "favorite": false,
-      "favourite": false
+      "favorite": true
     },
     {
       "twitterHandle": "@therockncoder",
@@ -37,7 +34,7 @@
       "bio": "An award winning developer and author.",
       "first": "Troy",
       "last": "Miles",
-      "favorite": false
+      "favorite": true
     },
     {
       "twitterHandle": "@eveporcello",
@@ -46,8 +43,7 @@
       "bio": "Eve Porcello is an instructor at Moon Highway, egghead.io, and LinkedIn Learning.",
       "first": "Eve",
       "last": "Porcello",
-      "favorite": true,
-      "favourite": false
+      "favorite": true
     }
   ]
 }

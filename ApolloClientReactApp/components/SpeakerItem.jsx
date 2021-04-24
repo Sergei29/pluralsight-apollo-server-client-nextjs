@@ -1,33 +1,33 @@
 import React from "react";
 import { useMutation, useReactiveVar } from "@apollo/client";
 import { GET_SPEAKERS } from "../graphql/queries";
-import { TOGGLE_SPEAKER_FAVOURITE, DELETE_SPEAKER } from "../graphql/mutations";
+import { TOGGLE_SPEAKER_FAVORITE, DELETE_SPEAKER } from "../graphql/mutations";
 import { checkBoxListVar, paginationDataVar } from "../graphql/apolloClient";
 
 const SpeakerItem = ({ speakerRec }) => {
-  const { id, first, last, favourite, fullName, checkBoxColumn } = speakerRec;
-  const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
+  const { id, first, last, favorite, fullName, checkBoxColumn } = speakerRec;
+  const [toggleSpeakerFavorite] = useMutation(TOGGLE_SPEAKER_FAVORITE);
   const [deleteSpeaker] = useMutation(DELETE_SPEAKER);
   const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
   const paginationData = useReactiveVar(paginationDataVar);
 
-  const handleToggleFavourite = (id, first, last, favourite) => {
-    toggleSpeakerFavourite({
+  const handleToggleFavorite = (id, first, last, favorite) => {
+    toggleSpeakerFavorite({
       variables: { speakerId: parseInt(id) },
       optimisticResponse: {
         __typename: "Mutation",
-        toggleSpeakerFavourite: {
+        toggleSpeakerFavorite: {
           __typename: "Speaker",
           id,
           first,
           last,
-          favourite: !favourite,
+          favorite: !favorite,
         },
       },
     });
   };
 
-  const handleDelete = (id, first, last, favourite) => {
+  const handleDelete = (id, first, last, favorite) => {
     const { offset, limit, currentPage } = paginationData;
     deleteSpeaker({
       variables: { speakerId: parseInt(id) },
@@ -38,7 +38,7 @@ const SpeakerItem = ({ speakerRec }) => {
           id,
           first,
           last,
-          favourite,
+          favorite,
         },
       },
       update: (cache, { data: { deleteSpeaker } }) => {
@@ -95,17 +95,15 @@ const SpeakerItem = ({ speakerRec }) => {
       </div>
       <div className="fav-clm col-sm-5">
         <span className="action">
-          <span
-            onClick={() => handleToggleFavourite(id, first, last, favourite)}
-          >
+          <span onClick={() => handleToggleFavorite(id, first, last, favorite)}>
             <span
               className={
-                favourite === true ? "fa fa-star orange" : "fa fa-star-o orange"
+                favorite === true ? "fa fa-star orange" : "fa fa-star-o orange"
               }
             />
-            &nbsp;&nbsp; Favourite
+            &nbsp;&nbsp; Favorite
           </span>
-          <span onClick={() => handleDelete(id, first, last, favourite)}>
+          <span onClick={() => handleDelete(id, first, last, favorite)}>
             <span className="fa fa-trash red" />
             &nbsp;&nbsp;Delete
           </span>

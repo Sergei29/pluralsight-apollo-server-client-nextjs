@@ -11,7 +11,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "reactstrap";
-import { ADD_SPEAKER, TOGGLE_SPEAKER_FAVOURITE } from "../graphql/mutations";
+import { ADD_SPEAKER, TOGGLE_SPEAKER_FAVORITE } from "../graphql/mutations";
 import { GET_SPEAKERS } from "../graphql/queries";
 import {
   currentThemeVar,
@@ -24,18 +24,18 @@ const Toolbar = ({ totalItemCount }) => {
   const [modal, setModal] = useState(false);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
-  const [favourite, setFavorite] = useState(false);
+  const [favorite, setFavorite] = useState(false);
   const [addSpeaker] = useMutation(ADD_SPEAKER);
-  const [toggleSpeakerFavourite] = useMutation(TOGGLE_SPEAKER_FAVOURITE);
+  const [toggleSpeakerFavorite] = useMutation(TOGGLE_SPEAKER_FAVORITE);
   const apolloClient = useApolloClient();
   const currentTheme = useReactiveVar(currentThemeVar);
   const selectedSpeakersIds = useReactiveVar(checkBoxListVar);
   const paginationData = useReactiveVar(paginationDataVar);
 
-  const addSpeakerEvent = (first, last, favourite) => {
+  const addSpeakerEvent = (first, last, favorite) => {
     const { offset, limit, currentPage } = paginationData;
     addSpeaker({
-      variables: { speaker: { first, last, favourite } },
+      variables: { speaker: { first, last, favorite } },
       update: (cache, { data: { addSpeaker } }) => {
         const { speakers } = cache.readQuery({
           query: GET_SPEAKERS,
@@ -97,7 +97,7 @@ const Toolbar = ({ totalItemCount }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    addSpeakerEvent(first, last, favourite);
+    addSpeakerEvent(first, last, favorite);
     setFirst("");
     setLast("");
     setFavorite(false);
@@ -105,13 +105,13 @@ const Toolbar = ({ totalItemCount }) => {
   };
 
   /**
-   * @description toggles favourite for all checked Speakers
+   * @description toggles favorite for all checked Speakers
    * @returns {undefined}
    */
   const handleToggleCheckAll = () => {
     if (selectedSpeakersIds) {
       selectedSpeakersIds.forEach((speakerId) => {
-        toggleSpeakerFavourite({
+        toggleSpeakerFavorite({
           variables: { speakerId: parseInt(speakerId) },
         });
       });
