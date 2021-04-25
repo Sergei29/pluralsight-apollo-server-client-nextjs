@@ -1,10 +1,10 @@
 import React from "react";
 import { useQuery, NetworkStatus } from "@apollo/client";
-import { GET_SPEAKERS_CONCAT } from "../graphql/queries";
+import { GET_SESSIONS_CONCAT } from "../graphql/queries";
 
-const SpeakersLoadMore = () => {
+const SessionsLoadMore = () => {
   const { loading, error, data, fetchMore, networkStatus } = useQuery(
-    GET_SPEAKERS_CONCAT,
+    GET_SESSIONS_CONCAT,
     {
       variables: {
         limit: 4,
@@ -13,15 +13,15 @@ const SpeakersLoadMore = () => {
       notifyOnNetworkStatusChange: true,
     }
   );
-  const loadingMoreSpeakers = networkStatus === NetworkStatus.fetchMore;
+  const loadingMoreSessions = networkStatus === NetworkStatus.fetchMore;
 
-  if (loading && !loadingMoreSpeakers) {
+  if (loading && !loadingMoreSessions) {
     return <div className="col-sm-6">Loading...</div>;
   }
   if (error) return <div className="col-sm-6">Error: {error.message}</div>;
 
-  const { datalist } = data.speakersConcat;
-  const { lastCursor, hasNextPage } = data.speakersConcat.pageInfo;
+  const { datalist } = data.sessionsConcat;
+  const { lastCursor, hasNextPage } = data.sessionsConcat.pageInfo;
 
   const handleFetchMore = () => {
     fetchMore({
@@ -31,25 +31,24 @@ const SpeakersLoadMore = () => {
       },
     });
   };
-
   return (
     <div className="container show-fav mt-3">
-      {datalist.map(({ id, first, last }) => (
+      {datalist.map(({ id, title, eventYear }) => (
         <div key={id} className="col-sm-12">
-          {`${first} ${last} (${id})`}
+          {`${eventYear} ${title} (${id})`}
         </div>
       ))}
       {hasNextPage && (
         <button
           className="btn btn-primary mt-2"
           onClick={handleFetchMore}
-          disabled={loadingMoreSpeakers}
+          disabled={loadingMoreSessions}
         >
-          {loadingMoreSpeakers ? "loading..." : "show more..."}
+          {loadingMoreSessions ? "loading..." : "show more..."}
         </button>
       )}
     </div>
   );
 };
 
-export default SpeakersLoadMore;
+export default SessionsLoadMore;
