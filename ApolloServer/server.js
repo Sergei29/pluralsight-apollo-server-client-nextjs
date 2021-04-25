@@ -19,6 +19,7 @@ const typeDefs = gql`
     last: String
     favorite: Boolean
     cursor: String
+    sessions: [Session]
   }
 
   type PageInfo {
@@ -38,9 +39,22 @@ const typeDefs = gql`
     pageInfo: PageInfo
   }
 
+  type Session {
+    id: ID!
+    title: String!
+    eventYear: String
+    cursor: String
+  }
+
+  type SessionResults {
+    datalist: [Session]
+    pageInfo: PageInfo
+  }
+
   type Query {
     speakers(offset: Int = 0, limit: Int = -1): SpeakerResults
     speakersConcat(limit: Int = -1, afterCursor: String = ""): SpeakerResults
+    sessionsConcat(limit: Int = -1, afterCursor: String = ""): SessionResults
   }
 
   type Mutation {
@@ -92,6 +106,56 @@ const resolvers = {
         datalist,
         pageInfo,
       };
+    },
+    sessionsConcat: async (parent, args, context, info) => {
+      const { limit, afterCursor } = args;
+      const { data } = await axios.get(`${DB_URI}/sessions`);
+      const arrSortedByName = data.sort((a, b) =>
+        a.eventYear.localeCompare(b.eventYear)
+      );
+      const offset = getOffsetCustom(arrSortedByName, afterCursor);
+
+      const datalist = data
+        .filter((_, index) => {
+          return index > offset - 1 && (offset + limit > index || limit === -1);
+        })
+        .map((objSpeaker) => {
+          objSpeaker.cursor = getCursor(objSpeaker.id);
+          return objSpeaker;
+        });
+
+      const pageInfo = {
+        totalItemCount: data.length,
+        lastCursor:
+          datalist.length > 0
+            ? getCursor(datalist[datalist.length - 1].id)
+            : "",
+        hasNextPage: offset + datalist.length < data.length,
+      };
+
+      return {
+        datalist,
+        pageInfo,
+      };
+    },
+  },
+  Speaker: {
+    sessions: async (parent) => {
+      const speakerId = parent.id;
+      const responseSessions = await axios.get(`${DB_URI}/sessions`);
+      const responseSessionSpeakers = await axios.get(
+        `${DB_URI}/sessionSpeakers`
+      );
+
+      const sessionIds = responseSessionSpeakers.data
+        .filter((rec) => rec.speakerId === speakerId)
+        .map((rec) => rec.sessionId);
+
+      const sessionsResult = responseSessions.data
+        .filter((rec) => sessionIds.includes(rec.id))
+        .sort((a, b) => a.eventYear.localeCompare(b.eventYear));
+
+      return sessionsResult;
     },
   },
   Mutation: {
