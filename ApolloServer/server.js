@@ -153,7 +153,6 @@ const resolvers = {
   Session: {
     room: async (parent, args, { roomLoader }, info) => {
       const roomId = parent.roomId;
-
       return roomLoader.load(roomId);
       // const responseRooms = await axios.get(`${DB_URI}/rooms`);
       // const roomRec = responseRooms.data.find(
