@@ -20,16 +20,16 @@ const typeDefs = gql`
     capacity: Int
   }
 
-  type Speaker {
+  type Speaker @cacheControl(maxAge: 3600) {
     id: ID!
     first: String
     last: String
     company: String
     twitterHandle: String
     bio: String
-    favorite: Boolean
+    favorite: Boolean @cacheControl(maxAge: 5, scope: PRIVATE)
     cursor: String
-    sessions: [Session]
+    sessions: [Session] @cacheControl(maxAge: 600)
   }
 
   type PageInfo {
@@ -162,7 +162,8 @@ const resolvers = {
     },
   },
   Speaker: {
-    sessions: async (parent, args, { sessionsLoader }) => {
+    sessions: async (parent, args, { sessionsLoader }, info) => {
+      info.cacheControl.setCacheHint({ maxAge: 600, scope: "PUBLIC" });
       const speakerId = parent.id;
       return sessionsLoader.load(speakerId);
     },
