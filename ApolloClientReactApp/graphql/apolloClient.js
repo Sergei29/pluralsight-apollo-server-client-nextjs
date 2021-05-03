@@ -1,5 +1,8 @@
 import { ApolloClient, InMemoryCache, makeVar } from "@apollo/client";
 import { generalConcatPagination } from "./helpers/generalConcatPagination";
+import { createPersistedQueryLink } from "apollo-link-persisted-queries";
+import { createHttpLink } from "apollo-link-http";
+import { ApolloLink } from "apollo-link";
 
 export const currentThemeVar = makeVar("dark");
 export const checkBoxListVar = makeVar([]);
@@ -9,6 +12,11 @@ export const paginationDataVar = makeVar({
   currentPage: 0,
   totalItemCount: 0,
 });
+
+const link = ApolloLink.from([
+  createPersistedQueryLink({ useGETForHashedQueries: true }),
+  createHttpLink({ uri: "http://localhost:4000/graphql" }),
+]);
 
 export const useApollo = () => {
   const options = {
@@ -41,7 +49,7 @@ export const useApollo = () => {
   };
 
   return new ApolloClient({
-    uri: "http://localhost:4000",
+    link,
     cache: new InMemoryCache(options),
   });
 };
