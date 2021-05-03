@@ -1,5 +1,6 @@
 const { gql, ApolloServer, UserInputError } = require("apollo-server");
 const axios = require("axios").default;
+const DataLoader = require("dataloader");
 
 const DB_URI = "http://localhost:5000";
 
@@ -13,6 +14,12 @@ const getOffsetCustom = (arrData, afterCursor) => {
 };
 
 const typeDefs = gql`
+  type Room {
+    id: ID!
+    name: String
+    capacity: Int
+  }
+
   type Speaker {
     id: ID!
     first: String
@@ -44,6 +51,7 @@ const typeDefs = gql`
     title: String!
     eventYear: String
     cursor: String
+    room: Room
   }
 
   type SessionResults {
@@ -139,6 +147,17 @@ const resolvers = {
       };
     },
   },
+  Session: {
+    room: async (parent, args, { roomLoader }, info) => {
+      const roomId = parent.roomId;
+      return roomLoader.load(roomId);
+      // const responseRooms = await axios.get(`${DB_URI}/rooms`);
+      // const roomRec = responseRooms.data.find(
+      //   (objRoom) => objRoom.id === roomId
+      // );
+      // return roomRec;
+    },
+  },
   Speaker: {
     sessions: async (parent) => {
       const speakerId = parent.id;
@@ -201,6 +220,20 @@ async function apolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    context: () => {
+      return {
+        roomLoader: new DataLoader(async (roomIds) => {
+          const responseRooms = await axios.get(`${DB_URI}/rooms`);
+
+          const roomMap = responseRooms.data.reduce((objMap, objCurrent) => {
+            objMap[objCurrent.id] = objCurrent;
+            return objMap;
+          }, {});
+
+          return roomIds.map((roomId) => roomMap[roomId]);
+        }),
+      };
+    },
   });
 
   const PORT = process.env.PORT || 4000;
