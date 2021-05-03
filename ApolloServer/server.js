@@ -150,6 +150,7 @@ const resolvers = {
   Session: {
     room: async (parent, args, { roomLoader }, info) => {
       const roomId = parent.roomId;
+
       return roomLoader.load(roomId);
       // const responseRooms = await axios.get(`${DB_URI}/rooms`);
       // const roomRec = responseRooms.data.find(
@@ -159,22 +160,9 @@ const resolvers = {
     },
   },
   Speaker: {
-    sessions: async (parent) => {
+    sessions: async (parent, args, { sessionsLoader }) => {
       const speakerId = parent.id;
-      const responseSessions = await axios.get(`${DB_URI}/sessions`);
-      const responseSessionSpeakers = await axios.get(
-        `${DB_URI}/sessionSpeakers`
-      );
-
-      const sessionIds = responseSessionSpeakers.data
-        .filter((rec) => rec.speakerId === speakerId)
-        .map((rec) => rec.sessionId);
-
-      const sessionsResult = responseSessions.data
-        .filter((rec) => sessionIds.includes(rec.id))
-        .sort((a, b) => a.eventYear.localeCompare(b.eventYear));
-
-      return sessionsResult;
+      return sessionsLoader.load(speakerId);
     },
   },
   Mutation: {
@@ -230,7 +218,46 @@ async function apolloServer() {
             return objMap;
           }, {});
 
-          return roomIds.map((roomId) => roomMap[roomId]);
+          const arrSelectdRooms = roomIds.map((roomId) => roomMap[roomId]);
+          return arrSelectdRooms;
+        }),
+        sessionsLoader: new DataLoader(async (speakerIds) => {
+          const responseSessions = await axios.get(`${DB_URI}/sessions`);
+          const responseSessionSpeakers = await axios.get(
+            `${DB_URI}/sessionSpeakers`
+          );
+
+          const sessionIds = responseSessionSpeakers.data
+            .filter((objSessionSpeaker) =>
+              speakerIds.includes(objSessionSpeaker.speakerId)
+            )
+            .map((objSessionSpeaker) => objSessionSpeaker.sessionId);
+
+          const sessionsResult = responseSessions.data.filter((objSession) =>
+            sessionIds.includes(objSession.id)
+          );
+
+          let sessionsForSpeakerMap = {};
+
+          speakerIds.forEach((speakerId) => {
+            const sessionIdsForSpeaker = responseSessionSpeakers.data
+              .filter((sessionSpeakerRec) => {
+                return sessionSpeakerRec.speakerId === speakerId;
+              })
+              .map((sessionSpeakerRec) => {
+                return sessionSpeakerRec.sessionId;
+              });
+
+            const sessionsForSpeaker = sessionsResult.filter((session) => {
+              return sessionIdsForSpeaker.includes(session.id);
+            });
+
+            sessionsForSpeakerMap[speakerId] = sessionsForSpeaker;
+          });
+
+          return speakerIds.map((speakerId) => {
+            return sessionsForSpeakerMap[speakerId];
+          });
         }),
       };
     },
