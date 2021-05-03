@@ -24,6 +24,9 @@ const typeDefs = gql`
     id: ID!
     first: String
     last: String
+    company: String
+    twitterHandle: String
+    bio: String
     favorite: Boolean
     cursor: String
     sessions: [Session]

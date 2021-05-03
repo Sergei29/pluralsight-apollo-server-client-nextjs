@@ -8,8 +8,19 @@ export const GET_SPEAKERS = gql`
         first
         last
         favorite
+        company
+        twitterHandle
+        bio
         fullName @client
         checkBoxColumn @client
+        sessions {
+          id
+          title
+          eventYear
+          room {
+            name
+          }
+        }
       }
       pageInfo {
         totalItemCount
@@ -26,6 +37,9 @@ export const GET_SPEAKERS_CONCAT = gql`
         first
         last
         favorite
+        company
+        twitterHandle
+        bio
         cursor
         fullName @client
         checkBoxColumn @client
